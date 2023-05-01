@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "istina-coursework-6"
+version = "0.1.0"
+description = ""
+authors = ["Nikita Vasiliev <nikita.vasiliev@math.msu.ru>"]
+readme = "README.md"
+packages = [{include = "istina_coursework_6"}]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
