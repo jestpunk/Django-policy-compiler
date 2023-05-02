@@ -9,7 +9,7 @@ Application which automatically checks whether user of some system has permissio
 
 So far it's just a regular Django project, so it uses the basic Django syntax
 
-```
+```bash
 python manage.py makemigrations
 python manage.py migrate
 python manage.py runserver
