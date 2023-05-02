@@ -7,4 +7,10 @@ Application which automatically checks whether user of some system has permissio
 
 ## How to use it
 
-*todo*
+So far it's just a regular Django project, so it uses the basic Django syntax
+
+```
+python manage.py makemigrations
+python manage.py migrate
+python manage.py runserver
+```
