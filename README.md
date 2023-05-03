@@ -17,7 +17,7 @@ python manage.py runserver
 
 # 🎯 Coursework navigation (RU)
 
- |
+Раздел | Ссылка
 ------------- | -------------
 ❌ **Введение**  | [ссылка](coursework/1_introduction.md)
 ❌ **Модель доступа ChRelBAC**  | [ссылка](coursework/2_model.md)
