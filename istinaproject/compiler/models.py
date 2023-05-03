@@ -4,9 +4,10 @@ from django.db import models
 class User(models.Model):
     user_name = models.CharField('Имя пользователя', max_length=50)
     # ОДИН КО МНОГИМ ИЛИ МНОГИЕ КО МНОГИМ?
-    user_departments = models.ForeignKey('Department', on_delete=models.CASCADE)
+    departments_employee = models.ManyToManyField('Department', related_name='users_emplyee')
+    departments_representative = models.ManyToManyField('Department', related_name='users_representative')
     is_superuser = models.BooleanField('Является админом?', default=False)
-    user_papers = models.ManyToManyField('Paper')
+    papers_of_user = models.ManyToManyField('Paper', related_name='users_of_paper')
 
     class Meta:
         verbose_name = 'Пользователь'
@@ -14,7 +15,7 @@ class User(models.Model):
 
     def __str__(self):
         return (f'[USER]' + ('[SU]' if self.is_superuser else '') + 
-                f' {self.user_name} (dep: {self.user_departments})')
+                f' {self.user_name}')
 
 
 class Paper(models.Model):
@@ -31,7 +32,6 @@ class Paper(models.Model):
 
 class Department(models.Model):
     department_name = models.CharField('Название отдела', max_length=50)
-
 
     class Meta:
         verbose_name = 'Отдел'
