@@ -2,3 +2,5 @@
 .obsidian
 *.pyc
 .DS*
+push.sh
+
