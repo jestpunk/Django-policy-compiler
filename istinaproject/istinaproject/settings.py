@@ -19,8 +19,8 @@ ALLOWED_HOSTS = []
 
 # Application definition
 INSTALLED_APPS = [
-    'homepage.apps.HomepageConfig'
-    'compiler.apps.CompilerConfig',
+    'homepage',
+    'compiler',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
