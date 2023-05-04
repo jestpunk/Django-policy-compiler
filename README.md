@@ -19,7 +19,7 @@ python manage.py runserver
 
 Раздел | Ссылка
 ------------- | -------------
-❌ **Введение**  | [ссылка](coursework/1_introduction.md)
+**Введение**  | [ссылка](coursework/1_introduction.md)
 ❌ **Модель доступа ChRelBAC**  | [ссылка](coursework/2_model.md)
 ❌ **Компилятор разграничения доступа**  | [ссылка](coursework/3_compiler_theory.md)
 ❌ **Практическая реализация** | [ссылка](coursework/4_compiler_practice.md)
