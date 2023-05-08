@@ -2,12 +2,22 @@ from django.db import models
 
 
 class User(models.Model):
-    user_name = models.CharField('Имя пользователя', max_length=50)
-    # ОДИН КО МНОГИМ ИЛИ МНОГИЕ КО МНОГИМ?
-    departments_employee = models.ManyToManyField('Department', related_name='users_emplyee')
-    departments_representative = models.ManyToManyField('Department', related_name='users_representative')
-    is_superuser = models.BooleanField('Является админом?', default=False)
-    papers_of_user = models.ManyToManyField('Paper', related_name='users_of_paper')
+    user_name = models.CharField('Имя пользователя', 
+                                 max_length=50)
+    departments_employee =       models.ManyToManyField('Department', 
+                                                        related_name='employee_of_department', 
+                                                        #hidden=False,
+                                                        blank=True)
+    departments_representative = models.ManyToManyField('Department', 
+                                                        related_name='representatives_of_department', 
+                                                        #hidden=False,
+                                                        blank=True)
+    is_superuser = models.BooleanField('Является админом?', 
+                                       default=False)
+    papers_of_user = models.ManyToManyField('Paper', 
+                                            related_name='users_of_paper',
+                                            #hidden=False,
+                                            blank=True)
 
     class Meta:
         verbose_name = 'Пользователь'
