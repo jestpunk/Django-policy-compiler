@@ -1,0 +1,14 @@
+[tool.poetry]
+name = "istinaproject"
+version = "0.1.0"
+description = ""
+authors = ["Nikita Vasiliev <nikita.vasiliev@math.msu.ru>"]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+django = "4.1.4"
+django-environ = "0.10.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
