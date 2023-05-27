@@ -62,7 +62,7 @@ def cool_str(name, obj, full=False):
     return f'[>>>] {name} ({(str(type(obj))[:40] + "...") if not full else str(type(obj))}):\n\t\t{(str(obj)[:40] + "...") if not full else obj}\n\n'
 
 
-def compiler_function(source, label, dest, policies):
+def compiler_function(source, label, dest, policies, user_model):
     ret = ""
 
 #    user_manager = source.objects
@@ -77,6 +77,12 @@ def compiler_function(source, label, dest, policies):
 
     allowed_policies = policies.get_allowed_policies()
     prohibited_policies = policies.get_prohibited_policies()
+    user_manager = user_model.objects
+
+    print(cool_str('Прямое отношение', user_manager.filter(papers_of_user))) 
+    print(cool_str('Обратное отношение', user_manager.filter(users_of_paper)))
+    print(cool_str('Прямое отношение + фильтр',  user_manager.filter(papers_of_user__name='Алгебра')))
+    # Сложный фильтр ...
 
     for p in prohibited_policies:
         # если в итоговом объединении есть элемент source -> dest, return False

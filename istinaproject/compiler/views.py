@@ -16,8 +16,11 @@ def compiler_view(request):
 
     pm = Policy_manager()
     pm.add_policy(p)
+    
+    # Это надо будет убрать
+    user_model = models.User
 
-    result = compiler_function(source, "edit", dest, pm)
+    result = compiler_function(source, "edit", dest, pm, user_model)
     print(result)
     
     return HttpResponse('COMPILER')
