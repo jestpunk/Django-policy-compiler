@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "istinaproject"
-version = "0.1.0"
+version = "1.0.0"
 description = ""
 authors = ["Nikita Vasiliev <nikita.vasiliev@math.msu.ru>"]
 
@@ -8,7 +8,7 @@ authors = ["Nikita Vasiliev <nikita.vasiliev@math.msu.ru>"]
 DJANGO_SETTINGS_MODULE = "istinaproject.settings"
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.10"
 django = "4.1.4"
 django-environ = "0.10.0"
 loguru = "^0.7.0"

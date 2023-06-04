@@ -6,23 +6,42 @@ import sys
 
 
 class Rule_category(Enum):
+    """
+    Категория для правила,согласно модели ChRelBAC
+    Может быть разрашающей или запрещающей
+    """
+
     ALLOWED = 1
     PROHIBITED = 2
 
 
-# rename to rule
 @dataclass
 class Rule:
     def __init__(self, category=None, labels=None, name=None, chain=None):
         """
-        category: Rule_category — запрещаем или разрешаем правило
-        chain: ('author', 'publishers_of_paper', 'department')
-        """
-        # ДОБАВИТЬ ПОДДЕРЖКУ ФИЛЬТРА (ДЛЯ ЭТОГО ПОСЛЕДНИЙ ОБЪЕКТ ДОЛЖЕН БЫТЬ КОРТЕЖОМ
-        # (ОТНОШЕНИЕ, МЕТКА) ТИПА ('department_name', 'мехмат')
-        # self.
+        — category: Rule_category
+            НАПРИМЕР: Rule_сategory.ALLOWED
 
-        self.labels = labels  # список типов доступа, разрешенных этой цепочкой
+        — labels: Cписок из типов доступа, разрешаемых / запрещаемых этим правилом
+            НАПРИМЕР: ['edit', 'create']
+
+        — name: Строковое неформальное название правила
+            НАПРИМЕР: "Изменение статьи её автором"
+
+        — chain: Список из полей, последовательно соединяемых цепочкой
+            ВАЖНО: Может быть как обратным отношением (согласно Django callout),
+                   так и фильтром с условием. Для этого последний элемент цепочки
+                   должен быть кортежем, у которого первый элемент — тип фильтра
+                   (так же согласно callouts, например "gte" для >=), а второй
+                   элемент — значение для фильтра. Если фильтр не применён,
+                   по умолчанию цепочка заканчивается на фильтре для id конечной
+                   модели, равному id переданного объекта dest
+            НАПРИМЕР: ('papers_created_by_user', 'department_representative_of_paper',
+                      'department_id', ('lte', 12))
+
+        """
+
+        self.labels = labels
         self.name = name
         self.category = category
         self.chain = chain
@@ -46,14 +65,17 @@ class Rule:
         return self.name
 
 
-# rename to Policy
 class Policy:
     def __init__(self):
-        # dict for faster looking for names in future
+        """
+        — allowed_rules: словарь, состоящий из пар название правила: правило
+                         для разрешенных правил
+
+        — prohibited_rules: то же, но для запрещенных правил
+        """
         self.allowed_rules = dict()
         self.prohibited_rules = dict()
 
-    # пока не поддерживает алиасы
     def add_rule(self, rule):
         if rule.get_category() == Rule_category.ALLOWED:
             self.allowed_rules[rule.get_name()] = rule
@@ -61,7 +83,6 @@ class Policy:
             self.prohibited_rules[rule.get_name()] = rule
 
     def get_allowed_rules(self):
-        # в будущем можно возвращать сразу итератор
         return self.allowed_rules.values()
 
     def get_prohibited_rules(self):
@@ -69,28 +90,37 @@ class Policy:
 
 
 def is_chain_exist(rule, source_manager, source, dest):
+    """
+    Функция, проверяющая, проходит ли цепочка от source к
+    dest по заданному правилу rule
+    """
     complex_field_for_query = ""
     chain = rule.get_chain()
 
+    value_of_last_field = dest.id
+
     for i, field in enumerate(chain):
-        complex_field_for_query += field
         if i != len(chain) - 1:
+            complex_field_for_query += field
             complex_field_for_query += "__"
+        else:
+            if isinstance(field, tuple):
+                complex_field_for_query += field[0]
+                value_of_last_field = field[1]
+            else:
+                complex_field_for_query += "id"
 
-    # СЮДА МОЖНО ДОБАВИТЬ БОЛЕЕ СЛОЖНЫЕ УСЛОВИЯ
-    complex_field_for_query += "__id"
+    log.debug(f"Complex_field = {complex_field_for_query}")
+    log.debug(f"Last value = {value_of_last_field}")
+    d = {complex_field_for_query: value_of_last_field}
 
-    d = {complex_field_for_query: dest.id}
-
-    # Не буду обрабатывать исключение, лучше добавить прогонку тестов для него в CICD
     result_object = source_manager.filter(**d).filter(id=source.id)
-
     return result_object.exists()
 
 
 def compiler_function(source, label, dest, policy):
     #:log.remove(0)
-    logging_format = "<green>[{level}]</green> {message}"
+    logging_format = "<blue>[{level}]</blue> {message}"
     log.add(sys.stderr, level="TRACE", format=logging_format)
 
     source_manager = type(source).objects
@@ -122,3 +152,5 @@ def compiler_function(source, label, dest, policy):
 # ADDONS
 # - по пользователю и типу получить все доступные объекты
 # - по объекту получить всех пользователей
+# - поддержка псевдонимов для правил
+# — использование правил внутри других правил

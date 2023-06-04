@@ -55,7 +55,7 @@ def test_full_source(django_db_setup):
 def test_wrong_field(django_db_setup):
     source = User.objects.get(user_name="Полный")
     dest = Department.objects.get(department_name="Мехмат")
-    
+
     r = Rule(
         Rule_category.ALLOWED,
         ["edit", "create"],
@@ -71,6 +71,5 @@ def test_wrong_field(django_db_setup):
         result = compiler_function(source, "edit", dest, p)
     # print(result)
 
-  # assert result == True
 
-
+# assert result == True
