@@ -39,6 +39,7 @@ class Paper(models.Model):
 
 class Department(models.Model):
     department_name = models.CharField('Название отдела', max_length=50)
+    department_representative_for_paper = models.ManyToManyField('Paper', related_name='Paper_for_representative_department', blank=True)
 
     class Meta:
         verbose_name = 'Отдел'

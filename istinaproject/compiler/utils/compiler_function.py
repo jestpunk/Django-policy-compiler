@@ -1,7 +1,3 @@
-# compiler_function(some_user, "delete", some_paper, policy)
-
-#policy = ['users', 'representative', 'paper', ['delete', 'edit', 'create']]
-
 from dataclasses import dataclass
 from enum import Enum
 from collections import defaultdict as dd
@@ -12,15 +8,22 @@ class Policy_category(Enum):
     PROHIBITED = 2
 
 
+# rename to rule
 @dataclass
 class Policy:
     def __init__(self, category=None, 
-                       name=None, 
+                       labels=None,
+                       name=None,
                        chain=None):
         '''
             category: Policy_category — запрещаем или разрешаем политику
-            chain: (('author', 'paper'), ('topic', 'Algebra'))
+            chain: ('author', 'publishers_of_paper', 'department')
         '''
+        # ДОБАВИТЬ ПОДДЕРЖКУ ФИЛЬТРА (ДЛЯ ЭТОГО ПОСЛЕДНИЙ ОБЪЕКТ ДОЛЖЕН БЫТЬ КОРТЕЖОМ
+        # (ОТНОШЕНИЕ, МЕТКА) ТИПА ('department_name', 'мехмат')
+        #self.
+       
+        self.labels = labels # список типов доступа, разрешенных этой цепочкой
         self.name = name
         self.category = category
         self.chain = chain
@@ -34,8 +37,18 @@ class Policy:
     def get_name(self):
         return self.name
 
+    def get_labels(self):
+        return self.labels
+
+    def get_chain(self):
+        return self.chain
+
+    def __str__(self):
+        return self.name
 
 
+
+# rename to Policy
 class Policy_manager:
     def __init__(self):
         self.allowed_policies = dict()
@@ -45,60 +58,67 @@ class Policy_manager:
     def add_policy(self, policy):
         if policy.get_category() == Policy_category.ALLOWED:
             self.allowed_policies[policy.get_name()] = policy
-        else:
-            self.prohibited_policies[policy.get_name()] = policy
+        else:            self.prohibited_policies[policy.get_name()] = policy
    
 
     def get_allowed_policies(self):
         # в будущем можно возвращать сразу итератор
-        return self.allowed_policies.items()
+        return self.allowed_policies.values()
         
 
     def get_prohibited_policies(self):
-        return self.prohibited_policies.items()
+        return self.prohibited_policies.values()
 
 
-def cool_str(name, obj, full=False):
-    return f'[>>>] {name} ({(str(type(obj))[:40] + "...") if not full else str(type(obj))}):\n\t\t{(str(obj)[:40] + "...") if not full else obj}\n\n'
+def is_chain_exist(policy, source_manager, source, dest):
+    complex_field_for_query = ""
+    chain = policy.get_chain() 
 
-
-def compiler_function(source, label, dest, policies, user_model):
-    ret = ""
-
-#    user_manager = source.objects
-#    eugen = user_manager.get(id=2)
+    for i, field in enumerate(chain):
+        complex_field_for_query += field
+        if i != len(chain) - 1:
+            complex_field_for_query += '__'
     
-#    paper_manager = dest.objects
-#    algebra = paper_manager.get(id=3)
+    # СЮДА МОЖНО ДОБАВИТЬ БОЛЕЕ СЛОЖНЫЕ УСЛОВИЯ
+    complex_field_for_query += '__id' 
 
-    # all users, created this paper
-    # нам требуется объект модели, название отношения, необходимый фильтр на это отношение
-    #ret += cool_str('paper', source.objects.filter(papers_of_user__paper_name='Алгебра') , True)
+    d = {complex_field_for_query: dest.id}
+    
+    # Не буду обрабатывать исключение, лучше добавить прогонку тестов для него в CICD
+    result_object = source_manager.filter(**d).filter(id=source.id)
+
+    return result_object.exists()
+
+
+def compiler_function(source, label, dest, policies):
+    
+    source_manager = type(source).objects
+    dest_manager = type(dest).objects
 
     allowed_policies = policies.get_allowed_policies()
     prohibited_policies = policies.get_prohibited_policies()
-    user_manager = user_model.objects
-
-    print(cool_str('Прямое отношение', user_manager.filter(papers_of_user))) 
-    print(cool_str('Обратное отношение', user_manager.filter(users_of_paper)))
-    print(cool_str('Прямое отношение + фильтр',  user_manager.filter(papers_of_user__name='Алгебра')))
-    # Сложный фильтр ...
 
     for p in prohibited_policies:
-        # если в итоговом объединении есть элемент source -> dest, return False
-        ...
+        #print('[i] Started prohibited policies')
+        if label not in p.get_labels():
+            continue
+        
+        if is_chain_exist(p, source_manager, source, dest):
+            return False
 
-    success = True
     for p in allowed_policies:
-        # если сломалось, success = False
-        ...
+        #print("[i] Started allowed policies")
+        
+        if label not in p.get_labels():
+            continue
 
-    return success
+        if is_chain_exist(p, source_manager, source, dest):
+            return True
+        
+    # didn't find any good policy
+    return False
 
 
-
-
-
-
-
-
+# ADDONS
+# - по пользователю и типу получить все доступные объекты
+# - по объекту получить всех пользователей
