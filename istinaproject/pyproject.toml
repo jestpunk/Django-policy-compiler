@@ -4,12 +4,16 @@ version = "0.1.0"
 description = ""
 authors = ["Nikita Vasiliev <nikita.vasiliev@math.msu.ru>"]
 
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "istinaproject.settings"
+
 [tool.poetry.dependencies]
 python = "^3.8"
 django = "4.1.4"
 django-environ = "0.10.0"
 loguru = "^0.7.0"
 black = "^23.3.0"
+pytest-django = "^4.5.2"
 
 [build-system]
 requires = ["poetry-core"]

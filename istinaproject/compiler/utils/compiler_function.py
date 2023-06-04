@@ -89,7 +89,7 @@ def is_chain_exist(rule, source_manager, source, dest):
 
 
 def compiler_function(source, label, dest, policy):
-    log.remove(0)
+    #:log.remove(0)
     logging_format = "<green>[{level}]</green> {message}"
     log.add(sys.stderr, level="TRACE", format=logging_format)
 
@@ -107,7 +107,7 @@ def compiler_function(source, label, dest, policy):
         if is_chain_exist(r, source_manager, source, dest):
             return False
 
-    log.trace("Started prohibited policies")
+    log.trace("Started allowed policies")
     for r in allowed_rules:
         if label not in r.get_labels():
             continue
