@@ -8,6 +8,8 @@ authors = ["Nikita Vasiliev <nikita.vasiliev@math.msu.ru>"]
 python = "^3.8"
 django = "4.1.4"
 django-environ = "0.10.0"
+loguru = "^0.7.0"
+black = "^23.3.0"
 
 [build-system]
 requires = ["poetry-core"]

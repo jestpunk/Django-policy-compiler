@@ -4,49 +4,101 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='Department',
+            name="Department",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('department_name', models.CharField(max_length=50, verbose_name='Название отдела')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "department_name",
+                    models.CharField(max_length=50, verbose_name="Название отдела"),
+                ),
             ],
             options={
-                'verbose_name': 'Отдел',
-                'verbose_name_plural': 'Отделы',
+                "verbose_name": "Отдел",
+                "verbose_name_plural": "Отделы",
             },
         ),
         migrations.CreateModel(
-            name='Paper',
+            name="Paper",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('paper_name', models.CharField(max_length=50, verbose_name='Название статьи')),
-                ('paper_text', models.TextField(verbose_name='Текст статьи')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "paper_name",
+                    models.CharField(max_length=50, verbose_name="Название статьи"),
+                ),
+                ("paper_text", models.TextField(verbose_name="Текст статьи")),
             ],
             options={
-                'verbose_name': 'Статья',
-                'verbose_name_plural': 'Статьи',
+                "verbose_name": "Статья",
+                "verbose_name_plural": "Статьи",
             },
         ),
         migrations.CreateModel(
-            name='User',
+            name="User",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('user_name', models.CharField(max_length=50, verbose_name='Имя пользователя')),
-                ('is_superuser', models.BooleanField(default=False, verbose_name='Является админом?')),
-                ('departments_employee', models.ManyToManyField(related_name='employee_of_department', to='compiler.department')),
-                ('departments_representative', models.ManyToManyField(related_name='representatives_of_department', to='compiler.department')),
-                ('papers_of_user', models.ManyToManyField(related_name='users_of_paper', to='compiler.paper')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "user_name",
+                    models.CharField(max_length=50, verbose_name="Имя пользователя"),
+                ),
+                (
+                    "is_superuser",
+                    models.BooleanField(
+                        default=False, verbose_name="Является админом?"
+                    ),
+                ),
+                (
+                    "departments_employee",
+                    models.ManyToManyField(
+                        related_name="employee_of_department", to="compiler.department"
+                    ),
+                ),
+                (
+                    "departments_representative",
+                    models.ManyToManyField(
+                        related_name="representatives_of_department",
+                        to="compiler.department",
+                    ),
+                ),
+                (
+                    "papers_of_user",
+                    models.ManyToManyField(
+                        related_name="users_of_paper", to="compiler.paper"
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Пользователь',
-                'verbose_name_plural': 'Пользователи',
+                "verbose_name": "Пользователь",
+                "verbose_name_plural": "Пользователи",
             },
         ),
     ]

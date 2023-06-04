@@ -1,29 +1,28 @@
 from dataclasses import dataclass
 from enum import Enum
 from collections import defaultdict as dd
+from loguru import logger as log
+import sys
 
 
-class Policy_category(Enum):
+class Rule_category(Enum):
     ALLOWED = 1
     PROHIBITED = 2
 
 
 # rename to rule
 @dataclass
-class Policy:
-    def __init__(self, category=None, 
-                       labels=None,
-                       name=None,
-                       chain=None):
-        '''
-            category: Policy_category — запрещаем или разрешаем политику
-            chain: ('author', 'publishers_of_paper', 'department')
-        '''
+class Rule:
+    def __init__(self, category=None, labels=None, name=None, chain=None):
+        """
+        category: Rule_category — запрещаем или разрешаем правило
+        chain: ('author', 'publishers_of_paper', 'department')
+        """
         # ДОБАВИТЬ ПОДДЕРЖКУ ФИЛЬТРА (ДЛЯ ЭТОГО ПОСЛЕДНИЙ ОБЪЕКТ ДОЛЖЕН БЫТЬ КОРТЕЖОМ
         # (ОТНОШЕНИЕ, МЕТКА) ТИПА ('department_name', 'мехмат')
-        #self.
-       
-        self.labels = labels # список типов доступа, разрешенных этой цепочкой
+        # self.
+
+        self.labels = labels  # список типов доступа, разрешенных этой цепочкой
         self.name = name
         self.category = category
         self.chain = chain
@@ -47,74 +46,75 @@ class Policy:
         return self.name
 
 
-
 # rename to Policy
-class Policy_manager:
+class Policy:
     def __init__(self):
-        self.allowed_policies = dict()
-        self.prohibited_policies = dict()
+        # dict for faster looking for names in future
+        self.allowed_rules = dict()
+        self.prohibited_rules = dict()
 
     # пока не поддерживает алиасы
-    def add_policy(self, policy):
-        if policy.get_category() == Policy_category.ALLOWED:
-            self.allowed_policies[policy.get_name()] = policy
-        else:            self.prohibited_policies[policy.get_name()] = policy
-   
+    def add_rule(self, rule):
+        if rule.get_category() == Rule_category.ALLOWED:
+            self.allowed_rules[rule.get_name()] = rule
+        else:
+            self.prohibited_rules[rule.get_name()] = rule
 
-    def get_allowed_policies(self):
+    def get_allowed_rules(self):
         # в будущем можно возвращать сразу итератор
-        return self.allowed_policies.values()
-        
+        return self.allowed_rules.values()
 
-    def get_prohibited_policies(self):
-        return self.prohibited_policies.values()
+    def get_prohibited_rules(self):
+        return self.prohibited_rules.values()
 
 
-def is_chain_exist(policy, source_manager, source, dest):
+def is_chain_exist(rule, source_manager, source, dest):
     complex_field_for_query = ""
-    chain = policy.get_chain() 
+    chain = rule.get_chain()
 
     for i, field in enumerate(chain):
         complex_field_for_query += field
         if i != len(chain) - 1:
-            complex_field_for_query += '__'
-    
+            complex_field_for_query += "__"
+
     # СЮДА МОЖНО ДОБАВИТЬ БОЛЕЕ СЛОЖНЫЕ УСЛОВИЯ
-    complex_field_for_query += '__id' 
+    complex_field_for_query += "__id"
 
     d = {complex_field_for_query: dest.id}
-    
+
     # Не буду обрабатывать исключение, лучше добавить прогонку тестов для него в CICD
     result_object = source_manager.filter(**d).filter(id=source.id)
 
     return result_object.exists()
 
 
-def compiler_function(source, label, dest, policies):
-    
+def compiler_function(source, label, dest, policy):
+    log.remove(0)
+    logging_format = "<green>[{level}]</green> {message}"
+    log.add(sys.stderr, level="TRACE", format=logging_format)
+
     source_manager = type(source).objects
     dest_manager = type(dest).objects
 
-    allowed_policies = policies.get_allowed_policies()
-    prohibited_policies = policies.get_prohibited_policies()
+    allowed_rules = policy.get_allowed_rules()
+    prohibited_rules = policy.get_prohibited_rules()
 
-    for p in prohibited_policies:
-        #print('[i] Started prohibited policies')
-        if label not in p.get_labels():
+    log.trace("Started prohibited policies")
+    for r in prohibited_rules:
+        if label not in r.get_labels():
             continue
-        
-        if is_chain_exist(p, source_manager, source, dest):
+
+        if is_chain_exist(r, source_manager, source, dest):
             return False
 
-    for p in allowed_policies:
-        #print("[i] Started allowed policies")
-        
-        if label not in p.get_labels():
+    log.trace("Started prohibited policies")
+    for r in allowed_rules:
+        if label not in r.get_labels():
             continue
 
-        if is_chain_exist(p, source_manager, source, dest):
+        if is_chain_exist(r, source_manager, source, dest):
             return True
-        
+
     # didn't find any good policy
     return False
 

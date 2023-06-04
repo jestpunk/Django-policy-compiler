@@ -4,19 +4,22 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('compiler', '0003_department_department_responsive_for_paper'),
+        ("compiler", "0003_department_department_responsive_for_paper"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='department',
-            name='department_responsive_for_paper',
+            model_name="department",
+            name="department_responsive_for_paper",
         ),
         migrations.AddField(
-            model_name='department',
-            name='department_representative_for_paper',
-            field=models.ManyToManyField(blank=True, related_name='Paper_for_representative_department', to='compiler.paper'),
+            model_name="department",
+            name="department_representative_for_paper",
+            field=models.ManyToManyField(
+                blank=True,
+                related_name="Paper_for_representative_department",
+                to="compiler.paper",
+            ),
         ),
     ]

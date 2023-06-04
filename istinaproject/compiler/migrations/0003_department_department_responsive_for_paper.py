@@ -4,15 +4,18 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('compiler', '0002_alter_user_departments_employee_and_more'),
+        ("compiler", "0002_alter_user_departments_employee_and_more"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='department',
-            name='department_responsive_for_paper',
-            field=models.ManyToManyField(blank=True, related_name='Paper_for_responsive_department', to='compiler.paper'),
+            model_name="department",
+            name="department_responsive_for_paper",
+            field=models.ManyToManyField(
+                blank=True,
+                related_name="Paper_for_responsive_department",
+                to="compiler.paper",
+            ),
         ),
     ]

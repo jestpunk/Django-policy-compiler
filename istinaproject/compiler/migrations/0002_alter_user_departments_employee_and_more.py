@@ -4,25 +4,34 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('compiler', '0001_initial'),
+        ("compiler", "0001_initial"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='user',
-            name='departments_employee',
-            field=models.ManyToManyField(blank=True, related_name='employee_of_department', to='compiler.department'),
+            model_name="user",
+            name="departments_employee",
+            field=models.ManyToManyField(
+                blank=True,
+                related_name="employee_of_department",
+                to="compiler.department",
+            ),
         ),
         migrations.AlterField(
-            model_name='user',
-            name='departments_representative',
-            field=models.ManyToManyField(blank=True, related_name='representatives_of_department', to='compiler.department'),
+            model_name="user",
+            name="departments_representative",
+            field=models.ManyToManyField(
+                blank=True,
+                related_name="representatives_of_department",
+                to="compiler.department",
+            ),
         ),
         migrations.AlterField(
-            model_name='user',
-            name='papers_of_user',
-            field=models.ManyToManyField(blank=True, related_name='users_of_paper', to='compiler.paper'),
+            model_name="user",
+            name="papers_of_user",
+            field=models.ManyToManyField(
+                blank=True, related_name="users_of_paper", to="compiler.paper"
+            ),
         ),
     ]
