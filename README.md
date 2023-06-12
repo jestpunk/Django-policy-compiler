@@ -7,22 +7,38 @@ Application which automatically checks whether user of some system has permissio
 
 ### How to use it
 
-So far it's just a regular Django project, so it uses the basic Django syntax
+First of all it's a Django project with Poetry, so start it with
 
 ```bash
-python manage.py makemigrations
-python manage.py migrate
-python manage.py runserver
+poetry install
+poetry python manage.py makemigrations
+poetry python manage.py migrate
+poetry python manage.py runserver
 ```
+
+Then, you can test it with supported pytest
+
+```bash
+poetry run pytest /path/to/compiler/utils/compiler_function_test.py
+```
+
+And check your code style with
+
+```bash
+poetry run black .
+```
+
+&nbsp;
 
 # 🎯 Coursework navigation (RU)
 
 Раздел | Ссылка
 ------------- | -------------
 **Введение**  | [ссылка](coursework_text/1_introduction.md)
-❌ **Модель доступа ChRelBAC**  | [ссылка](coursework_text/2_model.md)
-❌ **Компилятор разграничения доступа**  | [ссылка](coursework_text/3_compiler_theory.md)
+**Модель доступа ChRelBAC**  | [ссылка](coursework_text/2_model.md)
+**Компилятор разграничения доступа**  | [ссылка](coursework_text/3_compiler_theory.md)
 **Практическая реализация** | [ссылка](coursework_text/4_compiler_practice.md)
-❌ **Заключение** | [ссылка](coursework_text/5_conclusion.md)
-❌ **Список литературы** | [ссылка](coursework_text/6_literature.md)
+**Тестирование и архитектура** | [ссылка](coursework_text/5_test_architecture.md)
+**Заключение** | [ссылка](6_conclusion.md)
+**Список литературы** | [ссылка](7_literature.md)
 📁 **Папка со всеми файлами** | [ссылка](coursework_text)

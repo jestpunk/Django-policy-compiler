@@ -1,86 +1,110 @@
 # Практическая реализация 
 
-Фрагменттировать, добавить не всё отсюда
+### ООП структура
 
-```Python  
-from dataclasses import dataclass
-from enum import Enum
-from collections import defaultdict as dd
+Текущая реализации компилиятора политик основана на трёх структурах. Первая из них — категория правила, находящегося в политике. Очевидно, что для этих целей отлично подойдет ENUM перечисление. Напомним, что в реализуемой модели доступа ChRelBAC существует всего 2 категории: разрешающие и запрещающие правила
 
-
-class Policy_category(Enum):
-	ALLOWED = 1
-	PROHIBITED = 2
-
-
-@dataclass
-class Policy:
-	def __init__(self, category=None,
-				 name=None,
-				 chain=None):
-	'''
-	category: Policy_category — запрещаем или разрешаем политику
-	chain: (('author', 'paper'), ('topic', 'Algebra'))
-	'''
-		self.name = name
-		self.category = category	
-		self.chain = chain
-  
-	def get_category(self):
-		return self.category
-	  
-	def get_name(self):
-		return self.name
-	
-
-class Policy_manager:
-	def __init__(self):
-		self.allowed_policies = dict()
-		self.prohibited_policies = dict()
-
-	def add_policy(self, policy):
-		if policy.get_category() == Policy_category.ALLOWED:
-			self.allowed_policies[policy.get_name()] = policy
-		else:
-			self.prohibited_policies[policy.get_name()] = policy
-	
-	def get_allowed_policies(self):
-		return self.allowed_policies.items()
-	
-	def get_prohibited_policies(self):
-		return self.prohibited_policies.items()
-
-
-def cool_str(name, obj, full=False):
-	return f'[>>>] {name} ({(str(type(obj))[:40] + "...") 
-						   if not full 
-						   else str(type(obj))}):\n\t\t{(str(obj)[:40] + "...") 
-								    if not full 
-								    else obj}\n\n'
-
-
-def compiler_function(source, label, dest, policies, user_model):
-ret = ""
-
-user_manager = source.objects
-paper_manager = dest.objects
-
-allowed_policies = policies.get_allowed_policies()
-prohibited_policies = policies.get_prohibited_policies()
-
-user_manager = user_model.objects
-print(cool_str('Результат работы', user_object.objects.filter(papers_of_user__paper_name='Алгебра')))
-
-for p in prohibited_policies:
-# если в итоговом объединении есть элемент source -> dest, return False
-	...
-
-success = True
-for p in allowed_policies:
-# если сломалось, success = False
-	...
-
-return success
+```Python
+class Rule_category(Enum):
+    """
+    Категория для правила,согласно модели ChRelBAC
+    Может быть разрашающей или запрещающей
+    """
+    ALLOWED = 1
+    PROHIBITED = 2
 ```
 
-ellipsis
+Далее используя категорию правил реализуются сами правила, содержащие цепочки последовательно вызываемых атрибутов объектов (те самые цепочки из модели ChRelBAC, реализованные пока что как список строковых названий полей), название политики (в будущем рассматривается поддержка псевдонимов). По сути это не более чем `dataclass`, поэтому его реализацию мы опустим, вы сможете прочитать её в приложении или репозитории проекта.
+
+Однако важно заметить, что в описании цепочки оставлена возможность составлять выражения с условиями на конечное поле, согласно синтаксису Django callout (об этом ниже в подглаве "Функция is_chain_exist"). Для этого последний элемент цепочки должен быть кортежом, у которого первый элемент это строковое описание фильтра в синтаксисе Django callouts (например "gte" для фильтра "больше или равно"), а второй элемент это фильтрующее значение, с которым мы сравниваем поля финального объекта.
+
+Наконец, все правила объединяются в политику. Она хранит в себе двумя независимыми словарями (для быстрого доступа по имени, что будет полезно при расширении функционала). Оба словаря хранят пары "ключ — значение" вида  "название правила — объект правила". Один из словарей отвечает за разрешенные правила, второй за запрещенные. Не смешивая все правила в одну кашу мы, например, можем заранее отдельно проходится по запрещенным правилам и в случае выполнения какого-то из них запрещать доступ без просмотра разрешающих правил.
+
+&nbsp;
+
+### Функция компилятора
+
+Вызываемая извне функция компилятора `compiler_function` имеет сигнатуру, позволяющую вызывать её схожим с устным образом. Для проверки доступа объекта `source` к объекту `dest` с меткой доступа `label` используется вызов `compiler_function(source, label, dest, policy)`. Так, если у нас имеется представитель модели `User`, описанной в прошлой главе, под названием `some_user`, аналогичный представитель модели `Paper` `some_paper` и мы хотим проверить разрешённость доступа с меткой `edit`, вызов будет весьма наглядным:
+
+```Python
+some_user = User(...)
+some_paper = Paper(...)
+compiler_function(some_user, 'edit', some_paper, policy) # True/False
+```
+
+Заметим, что последний аргумент, содержаший в себе политику доступа, должен в дальнейшей работе быть удалён и вызываться как внешний пакет.
+
+Эта функция реализует верхнеуровневый контроль проверки. Например, внутри неё определяются разрешенные и запрещенные правила объекта политики, а так же менеджеры Django ORM, описанные в предыдущей главе:
+
+```Python
+source_manager = type(source).objects
+dest_manager = type(dest).objects
+
+allowed_rules = policy.get_allowed_rules()
+prohibited_rules = policy.get_prohibited_rules()
+```
+
+Далее для каждого запрещающего правила мы вызываем вспомогательную низкоуровневую процедуру `is_chain_exist`, проверяющую, существует ли описанная в правиле цепочка между `source` и `dest`. Если какая-то из цепочек была найдена, доступ тут же запрещается (функция возвращает `False`), иначе такая же проверка происходит для всех разрешающих правил. Только теперь при нахождении цепочки, соответствующей правилу, мы наоборот разрешаем доступ (функция возвращает `True`). Если ни одной цепочки не было найдено, в соответствии с моделью ChRelBAC доступ запрещен (функция возвращает `False`)
+
+```Python
+for r in prohibited_rules:
+        if label not in r.get_labels():
+            continue
+
+        if is_chain_exist(r, source_manager, source, dest):
+            return False
+
+for r in allowed_rules:
+        if label not in r.get_labels():
+            continue
+
+        if is_chain_exist(r, source_manager, source, dest):
+            return True
+
+# didn't find any good policy
+return False
+```
+
+&nbsp;
+
+###  Функция is_chain_exist
+
+Как мы знаем из предыдущей главы, эта функция проверяет наличие какой-то конкретной цепочки между объектами `source` и `dest`. Для этого в качестве дополнительного аргумента в функцию передаётся объект менеджер, позволяющий реализовать внутри функции всё богатство возможностей Django ORM. В частности, для последовательного обращения к полям объектов нашего проекта мы можем использовать метод `filter` менеджера. Она пройдет по интересующей нас последовательности полей (и даже может применить любой поддерживающийся фильтр, о чем написано выше в главе) и вернёт только тех представителей изначального типа (к которому принадлежит `source`), для которых эта цепочка отношений с возможным фильтром применима. Нам остаётся лишь проверить, находится ли среди этих объектов наш исходный (сравнение происходит по ключу `id`, автоматически заполняемому Django)
+
+Так как синтаксис требует сравнения конечного поля с каким-то значением, при отсутствии фильтра происходит сравнение поля `id` cо значением `id` объекта `dest` (таким образом мы оставляем только те объекты, которые имеют соответствующую цепочку отношение именно к интересующему нас объекту `dest`) 
+
+Как это происходит на практике? Для последовательного обращения к нескольким полям именованный аргумент метода `filter` должен содержать имена полей в необходимом порядке, разделённые двойным подчёркиванием. Так, вызов
+
+```Python
+user_manager.filter("papers_of_user__paper_for_representative_department__id"=3)
+```
+
+Вернёт нам всех тех пользователей, для которых статья, к которой они имеют отношение `papers_of_user` (то есть статья их авторства) имеет отношение `paper_for_representative_department` (то есть её представляет отдел) с отделом, у которого `id` равняется трём. 
+
+Значит надо на основе цепочки, переданной в функцию вместе с правилом, построить именованный аргумент нужного вида. 
+
+```Python
+complex_field_for_query = ""
+    chain = rule.get_chain()
+
+    value_of_last_field = dest.id
+
+    for i, field in enumerate(chain):
+        if i != len(chain) - 1:
+            complex_field_for_query += field
+            complex_field_for_query += "__"
+        else:
+            if isinstance(field, tuple):
+                complex_field_for_query += field[0]
+                value_of_last_field = field[1]
+            else:
+                complex_field_for_query += "id"
+```
+
+Здесь либо применяется описанный в правиле фильтр, либо используется как фильтр поле `id`  объекта `dest` . Наконец, из всех полученных объектов оставить только `source` (то есть только тот, у которого с ним совпадает `id`, что удобно задать новым фильтром). Если итоговый список пуст, значит искомое отношение между `source` и `dest` отсутствует, иначе присутствует. Именованный аргумент мы передаем через словарь, распаковывая его при вызове функции
+
+```Python
+ d = {complex_field_for_query: value_of_last_field}
+result_object = source_manager.filter(**d).filter(id=source.id)
+return result_object.exists()
+```
