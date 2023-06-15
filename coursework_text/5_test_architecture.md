@@ -81,5 +81,4 @@ for r in prohibited_rules:
 	if label not in r.get_labels():
 		continue
 ```
-
 *фрагмент функции `compiler_function`, использующий логирование*
